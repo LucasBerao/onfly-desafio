@@ -47,7 +47,19 @@ flowchart LR
 ```
 
 ## Variáveis de ambiente (.env)
-Crie um arquivo `.env` na raiz com as variáveis abaixo (ajuste valores conforme preferir):
+Há um arquivo de exemplo `.env.example`. Para criar o seu `.env` na raiz, use o comando do seu sistema:
+
+- Windows (PowerShell):
+```powershell
+Copy-Item .env.example .env
+```
+
+- Linux/macOS (Bash):
+```bash
+cp .env.example .env
+```
+
+Se preferir criar manualmente, utilize os valores abaixo (ajuste conforme preferir):
 ```env
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
@@ -59,15 +71,47 @@ O `docker-compose.yml` lê essas variáveis para configurar o Postgres e a conex
 
 ## Subir a infra (Docker Compose)
 1) Suba os serviços em background:
+
+- Windows (PowerShell):
+```powershell
+docker compose up -d
+```
+
+- Linux/macOS (Bash):
 ```bash
 docker compose up -d
 ```
+
 2) Verifique os logs do `n8n` (opcional):
+
+- Windows (PowerShell):
+```powershell
+$n8nId = docker compose ps -q n8n
+docker logs -f $n8nId
+```
+
+- Linux/macOS (Bash):
 ```bash
 docker logs -f $(docker compose ps -q n8n)
 ```
 3) A UI do n8n ficará disponível em:
 - http://localhost:5678
+
+### O que acontece automaticamente ao rodar `docker compose up -d`
+- node_builder:
+  - Executa `npm install` dentro de `n8n-random-node/` (apenas quando necessário).
+  - Executa `npm run build` e gera `./n8n-random-node/dist` (JS + SVG).
+  - Finaliza; o serviço `n8n` só inicia depois que ele termina com sucesso.
+- postgres:
+  - Inicializa o banco com as variáveis do `.env`.
+  - Executa `init-data.sh` para criar o usuário não‑root.
+  - Sinaliza “healthy” quando aceita conexões.
+- n8n:
+  - Só inicia após `postgres` estar healthy e `node_builder` concluir (depends_on).
+  - Carrega nós privados de `/home/node/.n8n/custom` (bind mount de `./n8n-random-node/dist`).
+  - Expoẽ a UI em http://localhost:5678.
+
+Observação: em execuções subsequentes, o Docker pode reutilizar cache/volumes e o `node_builder` pode rodar rapidamente ou nem reconstruir se nada mudou em `n8n-random-node/`.
 
 Observações relevantes no `docker-compose.yml`:
 - Montagem do volume: `./n8n-random-node/dist:/home/node/.n8n/custom` — é assim que o n8n carrega nós privados.
@@ -80,25 +124,63 @@ O projeto do node está em `n8n-random-node/` (TypeScript, estilo programático)
 Na primeira subida com `docker compose up -d`, o serviço `node_builder` executa automaticamente `npm install` e `npm run build`, populando `dist/`. Use os comandos abaixo apenas para o ciclo de desenvolvimento local.
 
 1) Instale dependências (primeira vez):
-```bash
-cd n8n-random-node
-npm install
-```
+  - Windows (PowerShell):
+  ```powershell
+  cd n8n-random-node
+  npm install
+  ```
+  - Linux/macOS (Bash):
+  ```bash
+  cd n8n-random-node
+  npm install
+  ```
 2) Compile e gere a saída em `dist/` (inclui JS e SVG):
-```bash
-npm run build
-```
+  - Windows (PowerShell):
+  ```powershell
+  npm run build
+  ```
+  - Linux/macOS (Bash):
+  ```bash
+  npm run build
+  ```
 A pasta `dist/` já está montada no container como `/home/node/.n8n/custom`, então o n8n verá o node após restart.
 
 Alternativa via Docker (sem instalar Node localmente):
-```bash
-docker compose run --rm node_builder
-```
+  - Windows (PowerShell):
+  ```powershell
+  docker compose run --rm node_builder
+  ```
+  - Linux/macOS (Bash):
+  ```bash
+  docker compose run --rm node_builder
+  ```
 
 3) Reinicie o n8n para recarregar nós privados:
-```bash
-docker compose -f ../docker-compose.yml restart n8n
-```
+  - Windows (PowerShell):
+  ```powershell
+  docker compose -f ../docker-compose.yml restart n8n
+  ```
+
+### O que permanece manual (sempre que necessário)
+- Criar o `.env` (uma vez) a partir do `.env.example`.
+- Abrir a UI do n8n no navegador: http://localhost:5678
+- Ver logs quando necessário (PowerShell ou Bash, exemplos neste README).
+- Durante o desenvolvimento do node:
+  - Rodar `npm run build` (ou `docker compose run --rm node_builder`).
+  - Reiniciar o serviço do n8n para recarregar nós privados.
+
+### Primeira execução vs. próximas execuções
+- Primeira execução:
+  - Necessário criar `.env`.
+  - `node_builder` fará `npm install` (mais demorado) e `npm run build`.
+  - Postgres inicializa o banco e roda `init-data.sh`.
+- Execuções subsequentes:
+  - Normalmente mais rápidas (cache e volumes já existentes).
+  - Só será preciso rebuild/restart do n8n se você alterar o código do node.
+  - Linux/macOS (Bash):
+  ```bash
+  docker compose -f ../docker-compose.yml restart n8n
+  ```
 
 ## Validar na UI do n8n
 1) Abra http://localhost:5678
@@ -111,20 +193,39 @@ docker compose -f ../docker-compose.yml restart n8n
 - Edite `n8n-random-node/src/nodes/Random/Random.node.ts`
 - Rode `npm run build` (ou `docker compose run --rm node_builder`) para recompilar em `dist/`
 - Reinicie o serviço do n8n:
-```bash
-docker compose -f ../docker-compose.yml restart n8n
-```
+  - Windows (PowerShell):
+  ```powershell
+  docker compose -f ../docker-compose.yml restart n8n
+  ```
+  - Linux/macOS (Bash):
+  ```bash
+  docker compose -f ../docker-compose.yml restart n8n
+  ```
 - Volte à UI e teste
 
-Dica: deixe um terminal com `docker logs -f $(docker compose ps -q n8n)` para checar qualquer aviso/erro de carregamento de nós.
+Dica: deixe um terminal com logs do n8n para checar qualquer aviso/erro de carregamento de nós.
+- Windows (PowerShell):
+```powershell
+$n8nId = docker compose ps -q n8n; docker logs -f $n8nId
+```
+- Linux/macOS (Bash):
+```bash
+docker logs -f $(docker compose ps -q n8n)
+```
 
 ## Troubleshooting
 - Porta 5678 ocupada: pare o processo que usa a porta ou ajuste o mapeamento em `docker-compose.yml`.
 - n8n não enxerga o node:
   - Confirme os arquivos dentro do container:
-    ```bash
-    docker exec -it $(docker compose ps -q n8n) sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
-    ```
+    - Windows (PowerShell):
+      ```powershell
+      $n8nId = docker compose ps -q n8n
+      docker exec -it $n8nId sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
+      ```
+    - Linux/macOS (Bash):
+      ```bash
+      docker exec -it $(docker compose ps -q n8n) sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
+      ```
   - Garanta que o `npm run build` gerou `dist/nodes/Random/Random.node.js` e `random.svg`.
   - Reinicie o n8n após o build.
 - Permissões de config do n8n: já habilitamos `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true` para manter seguro.
@@ -142,32 +243,67 @@ Dica: deixe um terminal com `docker logs -f $(docker compose ps -q n8n)` para ch
   - `HDM-123 feat(random): add programmatic Random node and icon`
   - `HDM-123 chore(dev): mount dist as custom nodes and restart n8n`
 
-## Apêndice: Comandos úteis
+## Apêndice: Comandos úteis (Windows e Linux/macOS)
 - Subir a infra:
-```bash
-docker compose up -d
-```
+  - PowerShell
+    ```powershell
+    docker compose up -d
+    ```
+  - Bash
+    ```bash
+    docker compose up -d
+    ```
 - Listar serviços:
-```bash
-docker compose ps
-```
+  - PowerShell
+    ```powershell
+    docker compose ps
+    ```
+  - Bash
+    ```bash
+    docker compose ps
+    ```
 - Logs do n8n:
-```bash
-docker logs -f $(docker compose ps -q n8n)
-```
+  - PowerShell
+    ```powershell
+    $n8nId = docker compose ps -q n8n; docker logs -f $n8nId
+    ```
+  - Bash
+    ```bash
+    docker logs -f $(docker compose ps -q n8n)
+    ```
 - Reiniciar n8n:
-```bash
-docker compose restart n8n
-```
-- Build do node:
-```bash
-cd n8n-random-node && npm run build
-```
+  - PowerShell
+    ```powershell
+    docker compose restart n8n
+    ```
+  - Bash
+    ```bash
+    docker compose restart n8n
+    ```
+- Build do node (local):
+  - PowerShell
+    ```powershell
+    cd n8n-random-node; npm run build
+    ```
+  - Bash
+    ```bash
+    cd n8n-random-node && npm run build
+    ```
 - Build do node via serviço Docker:
-```bash
-docker compose run --rm node_builder
-```
+  - PowerShell
+    ```powershell
+    docker compose run --rm node_builder
+    ```
+  - Bash
+    ```bash
+    docker compose run --rm node_builder
+    ```
 - Conferir arquivos do node no container:
-```bash
-docker exec -it $(docker compose ps -q n8n) sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
-```
+  - PowerShell
+    ```powershell
+    $n8nId = docker compose ps -q n8n; docker exec -it $n8nId sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
+    ```
+  - Bash
+    ```bash
+    docker exec -it $(docker compose ps -q n8n) sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
+    ```
