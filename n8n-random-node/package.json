@@ -1,0 +1,20 @@
+{
+  "name": "n8n-nodes-random",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Random.org integer generator custom node for n8n",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc && shx mkdir -p dist/nodes/Random && shx cp src/nodes/Random/random.svg dist/nodes/Random/random.svg"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "typescript": "^5.4.5",
+    "shx": "^0.3.4"
+  },
+  "dependencies": {
+    "n8n-core": "^1.68.0",
+    "n8n-workflow": "^1.68.0"
+  }
+}
+
