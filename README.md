@@ -309,8 +309,7 @@ docker logs -f $(docker compose ps -q n8n)
     ```
 ## Aplicação prática: Demonstração com IA
 
-Do desafio principal à aplicação prática
-O objetivo central deste desafio foi criar um nó customizado do n8n que integrasse a API do Random.org. A infra com Docker, o ambiente do n8n e a implementação em TypeScript foram concluídos com sucesso. Para mostrar o valor real do conector, foi preparada uma demonstração que evidencia seu uso em um fluxo moderno com a IA do Google Gemini.
+Do desafio principal à aplicação prática: o objetivo central foi criar um nó customizado do n8n que integrasse a API do Random.org. A infra com Docker, o ambiente do n8n e a implementação em TypeScript foram concluídos com sucesso. Para mostrar o valor real do conector, preparei uma demonstração que evidencia seu uso em um fluxo moderno com a IA do Google Gemini.
 
 ### Validação do nó principal (Random)
 Para comprovar o funcionamento do conector, a imagem abaixo mostra a execução do nó no n8n. É possível visualizar os parâmetros Min/Max na entrada (Input) e o número aleatório gerado na saída (Output), validando a integração com o Random.org.
