@@ -18,6 +18,10 @@ Abaixo, o passo a passo completo — do zero até executar o node na UI do n8n.
 - Referências oficiais
 - Convenções de branch e commits
 - Apêndice: Comandos úteis
+- [Aplicação prática: Demonstração com IA](#demo-ia)
+  - [Validação do nó principal (Random)](#demo-validacao)
+  - [Demonstração interativa com IA](#demo-interativa)
+  - [Como a demo foi construída (passo a passo)](#demo-passo-a-passo)
 
 ## Pré‑requisitos
 - Docker e Docker Compose instalados
@@ -27,8 +31,13 @@ Abaixo, o passo a passo completo — do zero até executar o node na UI do n8n.
 ## Estrutura de pastas
 ```
 .
+├─ desafio-tecnico.md                  # Enunciado do desafio
 ├─ docker-compose.yml                  # Infra do n8n + Postgres
 ├─ init-data.sh                        # Script p/ criar usuário não-root no Postgres
+├─ interface-do-conector.png           # Diagrama/captura do conector
+├─ assets/                             # Imagens usadas no README
+│  ├─ demonstracao-ia.gif
+│  └─ teste-no-random.png
 ├─ n8n-random-node/                    # Projeto do node customizado (TypeScript)
 │  ├─ src/nodes/Random/Random.node.ts  # Implementação do node
 │  ├─ src/nodes/Random/random.svg      # Ícone do node
@@ -307,21 +316,21 @@ docker logs -f $(docker compose ps -q n8n)
     ```bash
     docker exec -it $(docker compose ps -q n8n) sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
     ```
-## Aplicação prática: Demonstração com IA
+## <a id="demo-ia"></a>Aplicação prática: Demonstração com IA
 
 Do desafio principal à aplicação prática: o objetivo central foi criar um nó customizado do n8n que integrasse a API do Random.org. A infra com Docker, o ambiente do n8n e a implementação em TypeScript foram concluídos com sucesso. Para mostrar o valor real do conector, preparei uma demonstração que evidencia seu uso em um fluxo moderno com a IA do Google Gemini.
 
-### Validação do nó principal (Random)
+### <a id="demo-validacao"></a>Validação do nó principal (Random)
 Para comprovar o funcionamento do conector, a imagem abaixo mostra a execução do nó no n8n. É possível visualizar os parâmetros Min/Max na entrada (Input) e o número aleatório gerado na saída (Output), validando a integração com o Random.org.
 
 ![Execução do nó Random no n8n](assets/teste-no-random.png)
 
-### Demonstração interativa com IA
+### <a id="demo-interativa"></a>Demonstração interativa com IA
 A demonstração final é uma página web interativa que consome um webhook do n8n: ao clicar no botão, o fluxo é executado, um número aleatório é gerado pelo nó Random, enviado ao Gemini para criar uma frase e o resultado é exibido na própria página — sem recarregar.
 
 ![Demonstração interativa com IA](assets/demonstracao-ia.gif)
 
-### Como a demo foi construída (passo a passo)
+### <a id="demo-passo-a-passo"></a>Como a demo foi construída (passo a passo)
 1) Conexão inicial: validamos a integração entre o nó Random e o agente de IA (Google Gemini). Inicialmente, o resultado era visível apenas no painel do n8n.
 2) Webhook como interface: substituímos o gatilho manual por um nó Webhook, transformando o fluxo em uma API acessível por URL.
 3) Resposta HTML + CSS: configuramos o nó Responder ao Webhook para retornar uma página HTML estilizada (fundo escuro, tipografia maior) em vez de texto simples.
