@@ -307,3 +307,23 @@ docker logs -f $(docker compose ps -q n8n)
     ```bash
     docker exec -it $(docker compose ps -q n8n) sh -lc "ls -la /home/node/.n8n/custom/nodes/Random"
     ```
+## Aplicação prática: Demonstração com IA
+
+Do desafio principal à aplicação prática
+O objetivo central deste desafio foi criar um nó customizado do n8n que integrasse a API do Random.org. A infra com Docker, o ambiente do n8n e a implementação em TypeScript foram concluídos com sucesso. Para mostrar o valor real do conector, foi preparada uma demonstração que evidencia seu uso em um fluxo moderno com a IA do Google Gemini.
+
+### Validação do nó principal (Random)
+Para comprovar o funcionamento do conector, a imagem abaixo mostra a execução do nó no n8n. É possível visualizar os parâmetros Min/Max na entrada (Input) e o número aleatório gerado na saída (Output), validando a integração com o Random.org.
+
+![Execução do nó Random no n8n](assets/teste-no-random.png)
+
+### Demonstração interativa com IA
+A demonstração final é uma página web interativa que consome um webhook do n8n: ao clicar no botão, o fluxo é executado, um número aleatório é gerado pelo nó Random, enviado ao Gemini para criar uma frase e o resultado é exibido na própria página — sem recarregar.
+
+![Demonstração interativa com IA](assets/demonstracao-ia.gif)
+
+### Como a demo foi construída (passo a passo)
+1) Conexão inicial: validamos a integração entre o nó Random e o agente de IA (Google Gemini). Inicialmente, o resultado era visível apenas no painel do n8n.
+2) Webhook como interface: substituímos o gatilho manual por um nó Webhook, transformando o fluxo em uma API acessível por URL.
+3) Resposta HTML + CSS: configuramos o nó Responder ao Webhook para retornar uma página HTML estilizada (fundo escuro, tipografia maior) em vez de texto simples.
+4) Interatividade via botão (JavaScript): criamos uma página index.html separada que usa fetch para chamar o webhook e atualizar o conteúdo dinamicamente, sem reload. Para isso, adicionamos o header CORS: Access-Control-Allow-Origin: * no nó Responder ao Webhook.
